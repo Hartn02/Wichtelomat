@@ -1,24 +1,476 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-<title>Test</title>
-<style>
-body{
-background:green;
-color:white;
-font-family:Arial;
-text-align:center;
-padding-top:100px;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wichtelomat</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --gold-1: #FFE58F;
+      --gold-2: #D4AF37;
+      --gold-3: #AA7C11;
+      --gold-gradient: linear-gradient(135deg, #FFE58F 0%, #D4AF37 50%, #AA7C11 100%);
+      --card-bg: rgba(9, 32, 21, 0.85);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 30%, #0d3824 0%, #05130b 70%, #020a05 100%);
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+      padding: 1rem;
+    }
+
+    #star-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+      z-index: 2;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 3.2rem;
+      font-weight: 900;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 3px;
+      filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+      margin-bottom: 0.5rem;
+    }
+
+    p.subtitle {
+      color: #a3c9b4;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .tab-btn {
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: var(--gold-1);
+      padding: 0.6rem 1.6rem;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-family: 'Cinzel', serif;
+      font-size: 0.95rem;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--gold-gradient);
+      color: #05130b;
+      border-color: var(--gold-1);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(212, 175, 55, 0.4);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 0 30px rgba(212, 175, 55, 0.1);
+      text-align: center;
+    }
+
+    select, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 1rem 1.2rem;
+      border-radius: 14px;
+      background: rgba(3, 15, 9, 0.95);
+      border: 1px solid var(--gold-3);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--gold-1);
+      box-shadow: 0 0 15px rgba(255, 229, 143, 0.3);
+    }
+
+    option:disabled {
+      color: #666666;
+      background: #0a1f14;
+    }
+
+    .btn-gold {
+      background: var(--gold-gradient);
+      color: #05130b;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.35);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(212, 175, 55, 0.6);
+    }
+
+    .gift-box {
+      font-size: 6.5rem;
+      margin: 1.5rem 0;
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.3s ease;
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    .gift-box:hover {
+      transform: scale(1.12) rotate(-5deg);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 35px rgba(255, 229, 143, 0.9)); transform: scale(1.04); }
+    }
+
+    .result-name {
+      font-family: 'Cinzel', serif;
+      font-size: 2.6rem;
+      font-weight: 900;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 1.2rem 0;
+      filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
+    }
+
+    .hidden { display: none; }
+
+    .admin-list {
+      text-align: left;
+      margin-top: 1.5rem;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .admin-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.05);
+      margin-bottom: 0.5rem;
+      border-radius: 10px;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #a3c9b4;
+      color: #a3c9b4;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1.2rem;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
 
-<h1>🎄 Wichtelomat funktioniert 🎄</h1>
+  <canvas id="star-canvas"></canvas>
 
-<p>
-GitHub Pages läuft erfolgreich.
-</p>
+  <div class="container">
+    <header>
+      <h1>Wichtelomat</h1>
+      <p class="subtitle">✨ Wähle deinen Namen & enthülle deinen Wichtelpartner ✨</p>
+    </header>
 
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tab-draw-btn" onclick="switchTab('draw')">Auslosung</button>
+      <button class="tab-btn" id="tab-admin-btn" onclick="switchTab('admin')">Admin-Bereich</button>
+    </div>
+
+    <!-- WICHTEL-ANSICHT -->
+    <div id="draw-section" class="glass-card">
+      <div id="step-select">
+        <label style="display:block; margin-bottom: 0.8rem; font-weight: 600; color: #a3c9b4;">Wer bist du?</label>
+        <select id="user-select">
+          <option value="">-- Name auswählen --</option>
+        </select>
+        <button class="btn-gold" onclick="confirmIdentity()">Weiter</button>
+      </div>
+
+      <div id="step-confirm" class="hidden">
+        <h2 style="font-family: 'Cinzel', serif; margin-bottom: 1rem; color: var(--gold-1);" id="confirm-greeting"></h2>
+        <p style="color: #a3c9b4; margin-bottom: 1.5rem;">Bist du bereit, deinen Wichtelpartner zu enthüllen?</p>
+        <button class="btn-gold" onclick="showGift()">Ja, weiter!</button>
+      </div>
+
+      <div id="step-gift" class="hidden">
+        <p style="color: #a3c9b4; font-size: 1.1rem;">Klicke auf das Geschenkpäckchen!</p>
+        <div class="gift-box" onclick="revealPairing()">🎁</div>
+      </div>
+
+      <div id="step-result" class="hidden">
+        <p style="font-size: 1rem; color: #a3c9b4; letter-spacing: 1px;">DU WICHTELST FÜR:</p>
+        <div class="result-name" id="assigned-person"></div>
+        <button class="btn-secondary" onclick="resetDraw()">Ergebnis verbergen</button>
+      </div>
+    </div>
+
+    <!-- ADMIN BEREICH -->
+    <div id="admin-section" class="glass-card hidden">
+      <div id="admin-login">
+        <h2 style="font-family: 'Cinzel', serif; margin-bottom: 1rem; color: var(--gold-1);">Admin-Bereich</h2>
+        <p style="color: #a3c9b4; margin-bottom: 1.5rem;">Passwort eingeben, um Paarungen einzusehen oder zu verändern.</p>
+        <input type="password" id="admin-pass" placeholder="Passwort (Standard: wichtel2026)">
+        <button class="btn-gold" onclick="checkAdminPass()">Anmelden</button>
+      </div>
+
+      <div id="admin-content" class="hidden">
+        <h2 style="font-family: 'Cinzel', serif; margin-bottom: 1.2rem; color: var(--gold-1);">Zuordnungen</h2>
+        
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <input type="text" id="giver-input" placeholder="Schenker" style="margin-bottom:0;">
+          <input type="text" id="receiver-input" placeholder="Wichtelpartner" style="margin-bottom:0;">
+        </div>
+        <button class="btn-gold" onclick="addPairing()" style="margin-bottom: 1rem;">Hinzufügen</button>
+        <button class="btn-secondary" onclick="resetCompletedStatus()" style="margin-top:0; margin-bottom: 1rem;">Status (bereits erledigt) zurücksetzen</button>
+
+        <div class="admin-list" id="pairings-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Eingepflegte Zuordnungen aus der Vorlage
+    const defaultPairings = {
+      "Marion": "Bernhard",
+      "Ludwig": "Stephan",
+      "Fritz": "Ludwig",
+      "Petra": "Nathalie",
+      "Kerstin": "Petra",
+      "Bernhard": "Fritz",
+      "Nathalie": "Kerstin",
+      "Stephan": "Marion"
+    };
+
+    let pairings = JSON.parse(localStorage.getItem('wichtel_pairings')) || defaultPairings;
+    let completedUsers = JSON.parse(localStorage.getItem('wichtel_completed')) || [];
+    let currentUser = "";
+
+    function savePairings() {
+      localStorage.setItem('wichtel_pairings', JSON.stringify(pairings));
+      initSelectOptions();
+      renderAdminList();
+    }
+
+    function initSelectOptions() {
+      const select = document.getElementById('user-select');
+      select.innerHTML = '<option value="">-- Name auswählen --</option>';
+      Object.keys(pairings).sort().forEach(giver => {
+        const opt = document.createElement('option');
+        opt.value = giver;
+        if (completedUsers.includes(giver)) {
+          opt.textContent = `${giver} (bereits erledigt)`;
+          opt.disabled = true;
+        } else {
+          opt.textContent = giver;
+        }
+        select.appendChild(opt);
+      });
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tab-draw-btn').classList.toggle('active', tab === 'draw');
+      document.getElementById('tab-admin-btn').classList.toggle('active', tab === 'admin');
+      document.getElementById('draw-section').classList.toggle('hidden', tab !== 'draw');
+      document.getElementById('admin-section').classList.toggle('hidden', tab !== 'admin');
+      if (tab === 'draw') resetDraw();
+    }
+
+    function confirmIdentity() {
+      const select = document.getElementById('user-select');
+      currentUser = select.value;
+      if (!currentUser) return alert('Bitte wähle zuerst deinen Namen aus!');
+      
+      document.getElementById('confirm-greeting').innerText = `Hallo ${currentUser}!`;
+      document.getElementById('step-select').classList.add('hidden');
+      document.getElementById('step-confirm').classList.remove('hidden');
+    }
+
+    function showGift() {
+      document.getElementById('step-confirm').classList.add('hidden');
+      document.getElementById('step-gift').classList.remove('hidden');
+    }
+
+    function revealPairing() {
+      const receiver = pairings[currentUser];
+      document.getElementById('assigned-person').innerText = receiver;
+      document.getElementById('step-gift').classList.add('hidden');
+      document.getElementById('step-result').classList.remove('hidden');
+
+      // Als erledigt speichern
+      if (!completedUsers.includes(currentUser)) {
+        completedUsers.push(currentUser);
+        localStorage.setItem('wichtel_completed', JSON.stringify(completedUsers));
+      }
+
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#FFE58F', '#D4AF37', '#ffffff']
+      });
+    }
+
+    function resetDraw() {
+      currentUser = "";
+      initSelectOptions();
+      document.getElementById('step-select').classList.remove('hidden');
+      document.getElementById('step-confirm').classList.add('hidden');
+      document.getElementById('step-gift').classList.add('hidden');
+      document.getElementById('step-result').classList.add('hidden');
+    }
+
+    function resetCompletedStatus() {
+      if (confirm('Möchtest du wirklich alle Namen wieder zur Auslosung freigeben?')) {
+        completedUsers = [];
+        localStorage.removeItem('wichtel_completed');
+        initSelectOptions();
+        alert('Alle Namen können nun wieder ausgewählt werden.');
+      }
+    }
+
+    function checkAdminPass() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === 'wichtel2026') {
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-content').classList.remove('hidden');
+        renderAdminList();
+      } else {
+        alert('Falsches Passwort!');
+      }
+    }
+
+    function renderAdminList() {
+      const list = document.getElementById('pairings-list');
+      list.innerHTML = '';
+      Object.entries(pairings).forEach(([giver, receiver]) => {
+        const item = document.createElement('div');
+        item.className = 'admin-item';
+        const isDone = completedUsers.includes(giver) ? ' <span style="color:#FFE58F;">(erledigt)</span>' : '';
+        item.innerHTML = `
+          <span><strong>${giver}</strong> ${isDone} ➔ ${receiver}</span>
+          <button style="background:none; border:none; color:#ff6b6b; cursor:pointer;" onclick="deletePairing('${giver}')">Löschen</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function addPairing() {
+      const g = document.getElementById('giver-input').value.trim();
+      const r = document.getElementById('receiver-input').value.trim();
+      if (!g || !r) return alert('Bitte beide Felder ausfüllen!');
+      pairings[g] = r;
+      document.getElementById('giver-input').value = '';
+      document.getElementById('receiver-input').value = '';
+      savePairings();
+    }
+
+    function deletePairing(giver) {
+      delete pairings[giver];
+      completedUsers = completedUsers.filter(u => u !== giver);
+      localStorage.setItem('wichtel_completed', JSON.stringify(completedUsers));
+      savePairings();
+    }
+
+    // Canvas Sterne Animation
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 2 + 0.5,
+      alpha: Math.random(),
+      speed: Math.random() * 0.02 + 0.005,
+      fallingSpeed: Math.random() * 0.3 + 0.1
+    }));
+
+    function drawStars() {
+      ctx.clearRect(0, 0, width, height);
+
+      stars.forEach(s => {
+        s.alpha += s.speed;
+        if (s.alpha > 1 || s.alpha < 0.2) s.speed = -s.speed;
+
+        s.y += s.fallingSpeed;
+        if (s.y > height) {
+          s.y = 0;
+          s.x = Math.random() * width;
+        }
+
+        ctx.fillStyle = `rgba(255, 229, 143, ${Math.abs(s.alpha)})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(drawStars);
+    }
+
+    drawStars();
+    initSelectOptions();
+  </script>
 </body>
 </html>
